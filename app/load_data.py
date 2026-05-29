@@ -2,8 +2,8 @@ import os
 import tempfile
 import pandas as pd
 import requests
-from app.database import SessionLocal, engine
-from app.models import Base, Question
+from database import SessionLocal, engine
+from models import Base, Question
 
 # Public QA Dataset from HuggingFace (SQuAD Validation Parquet Shard)
 DATASET_URL = "https://huggingface.co/datasets/rajpurkar/squad/resolve/refs%2Fconvert%2Fparquet/plain_text/validation/0000.parquet"

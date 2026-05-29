@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db, engine
-from app.models import Base, Question
+from app.models import Base, Question, QuestionCreate, QuestionUpdate, QuestionOut
 
 
 @asynccontextmanager
@@ -35,3 +36,36 @@ def get_question(question_id: int, db: Session = Depends(get_db)):
     if not question:
         raise HTTPException(status_code=404, detail="Pregunta no encontrada")
     return question
+
+
+@app.post("/questions", response_model=QuestionOut, status_code=201)
+def create_question(payload: QuestionCreate, db: Session = Depends(get_db)):
+    q = Question(**payload.dict())
+    db.add(q)
+    db.commit()
+    db.refresh(q)
+    return q
+
+
+@app.put("/questions/{question_id}", response_model=QuestionOut)
+def update_question(question_id: int, payload: QuestionUpdate, db: Session = Depends(get_db)):
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Pregunta no encontrada")
+    update_data = payload.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(question, key, value)
+    db.add(question)
+    db.commit()
+    db.refresh(question)
+    return question
+
+
+@app.delete("/questions/{question_id}", status_code=204)
+def delete_question(question_id: int, db: Session = Depends(get_db)):
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Pregunta no encontrada")
+    db.delete(question)
+    db.commit()
+    return
